@@ -42,27 +42,41 @@ textfiles = {
 
 pokemonfiles = {
     "Diamond":{
+        "Personal":"/poketool/personal/personal.narc",  # Pokemon Data
+        "Evolution":"/poketool/personal/evo.narc",      # Evolutions
+        "Moves":"/poketool/personal/wotbl.narc"},       # Level-Up Moves
+    "Pearl":{
         "Personal":"/poketool/personal/personal.narc",
+        "Evolution":"/poketool/personal/evo.narc",
+        "Moves":"/poketool/personal/wotbl.narc"},
+    "Platinum":{
+        "Personal":"/poketool/personal/pl_personal.narc",
         "Evolution":"/poketool/personal/evo.narc",
         "Moves":"/poketool/personal/wotbl.narc"},
     "HeartGold":{
         "Personal":"/a/0/0/2",
-        "Evolution":"/a/0/3/4"},
+        "Evolution":"/a/0/3/4",
+        "Moves":"/a/0/3/3"},
     "SoulSilver":{
         "Personal":"/a/0/0/2",
-        "Evolution":"/a/0/3/4"},
+        "Evolution":"/a/0/3/4",
+        "Moves":"/a/0/3/3"},
     "Black":{
         "Personal":"/a/0/1/6",
-        "Evolution":"/a/0/1/9"},
+        "Evolution":"/a/0/1/9",
+        "Moves":"/a/0/1/8"},
     "White":{
         "Personal":"/a/0/1/6",
-        "Evolution":"/a/0/1/9"},
+        "Evolution":"/a/0/1/9",
+        "Moves":"/a/0/1/8"},
     "Black2":{
         "Personal":"/a/0/1/6",
-        "Evolution":"/a/0/1/9"},
+        "Evolution":"/a/0/1/9",
+        "Moves":"/a/0/1/8"},
     "White2":{
         "Personal":"/a/0/1/6",
-        "Evolution":"/a/0/1/9"},
+        "Evolution":"/a/0/1/9",
+        "Moves":"/a/0/1/8"},
 }
 
 movefiles = {
