@@ -150,12 +150,12 @@ class EditPokemon(EditDlg):
     def __init__(self, parent=None):
         super(EditPokemon, self).__init__(parent)
         game = config.project["versioninfo"][0]
-        self.personalfname = config.project["directory"]+"fs"+files[
-            game]["Personal"]
-        self.evolutionfname = config.project["directory"]+"fs"+files[
-            game]["Evolution"]
-        self.lvlmovesfname = config.project["directory"]+"fs"+files[
-            game]["Moves"]
+        self.personalfname = config.project["directory"]+"fs"+files[game]["Personal"]
+        self.evolutionfname = config.project["directory"]+"fs"+files[game]["Evolution"]
+        
+        if game == 'Diamond':
+            self.lvlmovesfname = config.project["directory"]+"fs"+files[game]["Moves"]
+        
         self.pokemonnames = self.getTextEntry("Pokemon")
         self.typenames = self.getTextEntry("Types")
         self.itemnames = self.getTextEntry("Items")
@@ -172,8 +172,10 @@ class EditPokemon(EditDlg):
         else:
             movefmt = ["H", "move %i"]
             terminate = struct.pack("H", 0xFFFF)
-        self.addListableTab("Moveset", movefmt, self.lvlmovesfname, 
-            moveTerminator, terminate, self.getMoveWidget)
+        
+        if game == 'Diamond':
+            self.addListableTab("Moveset", movefmt, self.lvlmovesfname, moveTerminator, terminate, self.getMoveWidget)
+        
         self.addTextTab("Flavor", self.getFlavorEntries, self.getFlavorEntry, 
             self.getFlavorWidget)
     def getTextEntry(self, entry):
