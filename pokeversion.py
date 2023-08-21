@@ -1,6 +1,7 @@
+import os
 import config
 
-gameids = {"ADA":"Diamond", "CPU":"Platinum", "IPK":"HeartGold", 
+gameids = {"ADA":"Diamond", "CPU":"Platinum", "IPK":"HeartGold",
     "IPG":"SoulSilver", "IRB":"Black", "IRA":"White", "IRE":"Black2",
     "IRD":"White2"}
 langs = {"E":"English", "J":"Japanese", "O":"English", "K":"Korean"}
@@ -12,85 +13,86 @@ gens = {"Diamond":4, "Pearl":4, "Platinum":4, "HeartGold":4, "SoulSilver":4,
 def get():
     if not config.project:
         return (None, None, None)
-    header = open(config.project["directory"]+"/header.bin", "rb")
+    header = open(os.path.join(config.project["directory"], "header.bin"), "rb")
     header.seek(0xC)
     code = header.read(4)
     romversion = int(header.read(2))
-    game = code[:3]
-    lang = code[3]
+    game = code[:3].decode()
+    lang = chr(code[3])
     if game in gameids:
         realgame = gameids[game]
     else:
         realgame = "Unknown"
+    gamename = "Unknown"
     for p in pairs:
         if realgame in p:
             gamename = p[0]
             break
     return (gamename, lang, romversion, realgame)
-    
+
 textfiles = {
-    "Diamond":{"Main":"/msgdata/msg.narc"},
-    "Pearl":{"Main":"/msgdata/msg.narc"},
-    "Platinum":{"Main":"/msgdata/pl_msg.narc"},
-    "HeartGold":{"Main":"/a/0/2/7"},
-    "SoulSilver":{"Main":"/a/0/2/7"},
-    "Black":{"Main":"/a/0/0/2", "Story":"/a/0/0/3"},
-    "White":{"Main":"/a/0/0/2", "Story":"/a/0/0/3"},
-    "Black2":{"Main":"/a/0/0/2", "Story":"/a/0/0/3"},
-    "White2":{"Main":"/a/0/0/2", "Story":"/a/0/0/3"},
+    "Diamond":{"Main":"msgdata/msg.narc"},
+    "Pearl":{"Main":"msgdata/msg.narc"},
+    "Platinum":{"Main":"msgdata/pl_msg.narc"},
+    "HeartGold":{"Main":"a/0/2/7"},
+    "SoulSilver":{"Main":"a/0/2/7"},
+    "Black":{"Main":"a/0/0/2", "Story":"a/0/0/3"},
+    "White":{"Main":"a/0/0/2", "Story":"a/0/0/3"},
+    "Black2":{"Main":"a/0/0/2", "Story":"a/0/0/3"},
+    "White2":{"Main":"a/0/0/2", "Story":"a/0/0/3"},
 }
 
 pokemonfiles = {
     "Diamond":{
-        "Personal":"/poketool/personal/personal.narc",  # Pokemon Data
-        "Evolution":"/poketool/personal/evo.narc",      # Evolutions
-        "Moves":"/poketool/personal/wotbl.narc"},       # Level-Up Moves
+        "Personal":"poketool/personal/personal.narc",  # Pokemon Data
+        "Evolution":"poketool/personal/evo.narc",      # Evolutions
+        "Moves":"poketool/personal/wotbl.narc"},       # Level-Up Moves
     "Pearl":{
-        "Personal":"/poketool/personal/personal.narc",
-        "Evolution":"/poketool/personal/evo.narc",
-        "Moves":"/poketool/personal/wotbl.narc"},
+        "Personal":"poketool/personal/personal.narc",
+        "Evolution":"poketool/personal/evo.narc",
+        "Moves":"poketool/personal/wotbl.narc"},
     "Platinum":{
-        "Personal":"/poketool/personal/pl_personal.narc",
-        "Evolution":"/poketool/personal/evo.narc",
-        "Moves":"/poketool/personal/wotbl.narc"},
+        "Personal":"poketool/personal/pl_personal.narc",
+        "Evolution":"poketool/personal/evo.narc",
+        "Moves":"poketool/personal/wotbl.narc"},
     "HeartGold":{
-        "Personal":"/a/0/0/2",
-        "Evolution":"/a/0/3/4",
-        "Moves":"/a/0/3/3"},
+        "Personal":"a/0/0/2",
+        "Evolution":"a/0/3/4",
+        "Moves":"a/0/3/3"},
     "SoulSilver":{
-        "Personal":"/a/0/0/2",
-        "Evolution":"/a/0/3/4",
-        "Moves":"/a/0/3/3"},
+        "Personal":"a/0/0/2",
+        "Evolution":"a/0/3/4",
+        "Moves":"a/0/3/3"},
     "Black":{
-        "Personal":"/a/0/1/6",
-        "Evolution":"/a/0/1/9",
-        "Moves":"/a/0/1/8"},
+        "Personal":"a/0/1/6",
+        "Evolution":"a/0/1/9",
+        "Moves":"a/0/1/8"},
     "White":{
-        "Personal":"/a/0/1/6",
-        "Evolution":"/a/0/1/9",
-        "Moves":"/a/0/1/8"},
+        "Personal":"a/0/1/6",
+        "Evolution":"a/0/1/9",
+        "Moves":"a/0/1/8"},
     "Black2":{
-        "Personal":"/a/0/1/6",
-        "Evolution":"/a/0/1/9",
-        "Moves":"/a/0/1/8"},
+        "Personal":"a/0/1/6",
+        "Evolution":"a/0/1/9",
+        "Moves":"a/0/1/8"},
     "White2":{
-        "Personal":"/a/0/1/6",
-        "Evolution":"/a/0/1/9",
-        "Moves":"/a/0/1/8"},
+        "Personal":"a/0/1/6",
+        "Evolution":"a/0/1/9",
+        "Moves":"a/0/1/8"},
 }
 
 movefiles = {
-    "Diamond":{"Moves":"/poketool/waza/waza_tbl.narc"},
-    "Pearl":{"Moves":"/poketool/waza/waza_tbl.narc"},
-    "Platinum":{"Moves":"/poketool/waza/pl_waza_tbl.narc"},
-    "HeartGold":{"Moves":"/a/0/1/1"},
-    "SoulSilver":{"Moves":"/a/0/1/1"},
-    "Black":{"Moves":"/a/0/2/1"},
-    "White":{"Moves":"/a/0/2/1"},
-    "Black2":{"Moves":"/a/0/2/1"},
-    "White2":{"Moves":"/a/0/2/1"},
+    "Diamond":{"Moves":"poketool/waza/waza_tbl.narc"},
+    "Pearl":{"Moves":"poketool/waza/waza_tbl.narc"},
+    "Platinum":{"Moves":"poketool/waza/pl_waza_tbl.narc"},
+    "HeartGold":{"Moves":"a/0/1/1"},
+    "SoulSilver":{"Moves":"a/0/1/1"},
+    "Black":{"Moves":"a/0/2/1"},
+    "White":{"Moves":"a/0/2/1"},
+    "Black2":{"Moves":"a/0/2/1"},
+    "White2":{"Moves":"a/0/2/1"},
 }
-    
+
 textentries = {
     "Diamond":{
         "English":{
@@ -169,11 +171,11 @@ textentries = {
     },
     "HeartGold":{
         "English":{
-            "Locations": 279, 
-            "Types": 735, 
-            "Abilities": 720, 
-            "Items": 222, 
-            "Moves": 750, 
+            "Locations": 279,
+            "Types": 735,
+            "Abilities": 720,
+            "Items": 222,
+            "Moves": 750,
             "Pokemon": 237,
             "Height": 814,
             "Weight": 812,
@@ -191,11 +193,11 @@ textentries = {
     },
     "SoulSilver":{
         "English":{
-            "Locations": 279, 
-            "Types": 735, 
-            "Abilities": 720, 
-            "Items": 222, 
-            "Moves": 750, 
+            "Locations": 279,
+            "Types": 735,
+            "Abilities": 720,
+            "Items": 222,
+            "Moves": 750,
             "Pokemon": 237,
             "Height": 814,
             "Weight": 812,
@@ -226,7 +228,7 @@ textentries = {
             "PokemonNames":{
                 "English": 70
             },
-            
+
         },
     },
     "White":{
@@ -244,7 +246,7 @@ textentries = {
             "PokemonNames":{
                 "English": 70
             },
-            
+
         },
     },
     "Black2":{
@@ -261,7 +263,7 @@ textentries = {
             "PokemonNames":{
                 "English": 90
             },
-            
+
         },
     },
 }

@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os, sys
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4 import QtCore, QtGui
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5 import QtCore
 
 import config
 from language import translations
@@ -37,34 +38,29 @@ class EditText(QMainWindow):
         self.menutasks["newtext"] = QAction(self.menus["file"])
         self.menutasks["newtext"].setText(translations["menu_newtext"])
         self.menus["file"].addAction(self.menutasks["newtext"])
-        QObject.connect(self.menutasks["newtext"],
-            QtCore.SIGNAL("triggered()"), self.newText)
+        self.menutasks["newtext"].triggered.connect(self.newText)
         for f in files[config.project["versioninfo"][0]]:
             self.menutasks["opentext_"+f] = QAction(self.menus["file"])
             self.menutasks["opentext_"+f].setText(
                 translations["menu_opentext"]+": "+f)
             self.menus["file"].addAction(self.menutasks["opentext_"+f])
             func = lambda x: (lambda: self.openTextNarc(x))
-            QObject.connect(self.menutasks["opentext_"+f],
-                QtCore.SIGNAL("triggered()"), func(f))
+            self.menutasks["opentext_"+f].triggered.connect(func(f))
         self.menutasks["savetext"] = QAction(self.menus["file"])
         self.menutasks["savetext"].setText(translations["menu_savetext"])
         self.menus["file"].addAction(self.menutasks["savetext"])
-        QObject.connect(self.menutasks["savetext"],
-            QtCore.SIGNAL("triggered()"), self.saveText)
+        self.menutasks["savetext"].triggered.connect(self.saveText)
         self.menutasks["close"] = QAction(self.menus["file"])
         self.menutasks["close"].setText(translations["menu_close"])
         self.menus["file"].addAction(self.menutasks["close"])
-        QObject.connect(self.menutasks["close"],
-            QtCore.SIGNAL("triggered()"), self.quit)
+        self.menutasks["close"].triggered.connect(self.quit)
         self.menubar.addAction(self.menus["file"].menuAction())
         self.menus["tools"] = QMenu(self.menubar)
         self.menus["tools"].setTitle(translations["menu_tools"])
         self.menutasks["search"] = QAction(self.menus["tools"])
         self.menutasks["search"].setText(translations["menu_search"])
         self.menus["tools"].addAction(self.menutasks["search"])
-        QObject.connect(self.menutasks["search"],
-            QtCore.SIGNAL("triggered()"), self.search)
+        self.menutasks["search"].triggered.connect(self.search)
         self.menubar.addAction(self.menus["tools"].menuAction())
         self.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(self)
@@ -73,13 +69,11 @@ class EditText(QMainWindow):
         self.widgetcontainer.setObjectName("widgetcontainer")
         self.textfilelist = QComboBox(self.widgetcontainer)
         self.textfilelist.setGeometry(QRect(50, 25, 200, 20))
-        QObject.connect(self.textfilelist,
-            QtCore.SIGNAL("currentIndexChanged(int)"), self.openText)
+        self.textfilelist.currentIndexChanged[int].connect(self.openText)
         self.textedit = QTextEdit(self.widgetcontainer)
         self.textedit.setGeometry(QRect(50, 50, 500, 300))
         self.textedit.setEnabled(False)
-        QObject.connect(self.textedit,
-            QtCore.SIGNAL("textChanged()"), self.changed)
+        self.textedit.textChanged.connect(self.changed)
         self.setCentralWidget(self.widgetcontainer)
         QMetaObject.connectSlotsByName(self)
     def newText(self):
@@ -87,8 +81,11 @@ class EditText(QMainWindow):
     def openTextNarc(self, f):
         if not self.checkClean():
             return
-        self.fname = config.project["directory"]+"fs"+files[
-            config.project["versioninfo"][0]][f]
+        self.fname = os.path.join(
+            config.project["directory"],
+            "fs",
+            files[config.project["versioninfo"][0]][f]
+            )
         self.narc = narc.NARC(open(self.fname, "rb").read())
         self.textfilelist.clear()
         for i in range(self.narc.btaf.getEntryNum()):
@@ -115,7 +112,7 @@ class EditText(QMainWindow):
             return
         version = config.project["versioninfo"]
         texts = []
-        for lines in unicode(self.textedit.toPlainText()).split("\n\n"):
+        for lines in self.textedit.toPlainText().split("\n\n"):
             t = lines.split(": ", 1)
             if len(t) < 2:
                 t.extend([""])
@@ -145,14 +142,14 @@ class EditText(QMainWindow):
     def checkClean(self, allowCancel=True):
         if self.dirty:
             if allowCancel:
-                prompt = QMessageBox.question(self, "Close?", 
+                prompt = QMessageBox.question(self, "Close?",
                     "This text file has been modified.\n"+
                         "Do you want to save this text file?",
                     QMessageBox.Yes, QMessageBox.No, QMessageBox.Cancel)
                 if prompt == QMessageBox.Cancel:
                     return False
             else:
-                prompt = QMessageBox.question(self, "Close?", 
+                prompt = QMessageBox.question(self, "Close?",
                     "This text file has been modified.\n"+
                         "Do you want to save this text file?",
                     QMessageBox.Yes, QMessageBox.No)
@@ -195,13 +192,13 @@ class EditText(QMainWindow):
         scroller.setWidget(container)
         dlg.setCentralWidget(wdgt)
         dlg.show()
-                
-            
-        
+
+
+
 
 def create():
     if not config.project:
-        QMessageBox.critical(None, translations["error_noromloaded_title"], 
+        QMessageBox.critical(None, translations["error_noromloaded_title"],
             translations["error_noromloaded"])
         return
     EditText(config.mw).show()

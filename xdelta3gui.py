@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os, sys
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4 import QtCore, QtGui
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5 import QtCore
 
 import config
 from language import translations
@@ -47,8 +48,7 @@ class MainWindow(QMainWindow):
         self.menutasks["openproject"].setText(translations["menu_openproject"])
         self.menutasks["openproject"].setShortcut("CTRL+O")
         self.menus["file"].addAction(self.menutasks["openproject"])
-        QObject.connect(self.menutasks["openproject"],
-            QtCore.SIGNAL("triggered()"), self.openProject)
+        self.menutasks["openproject"].triggered.connect(self.openProject)
         self.menubar.addAction(self.menus["file"].menuAction())
         self.setMenuBar(self.menubar)
         self.widgetcontainer = QWidget(self)
@@ -60,8 +60,7 @@ class MainWindow(QMainWindow):
             QRect(30, 30, 150, 25))
         self.projectinfo["location_base_name"].setText(
             translations["config_location_base_name"]+":")
-        QObject.connect(self.projectinfo["location_base_name"],
-            QtCore.SIGNAL("pressed()"), self.openBase)
+        self.projectinfo["location_base_name"].pressed.connect(self.openBase)
         self.projectinfo["location_base_value"] = QLineEdit(
             self.widgetcontainer)
         self.projectinfo["location_base_value"].setGeometry(
@@ -76,8 +75,7 @@ class MainWindow(QMainWindow):
             self.widgetcontainer)
         self.projectinfo["project_output_value"].setGeometry(
             QRect(180, 60, 150, 25))
-        QObject.connect(self.projectinfo["project_output_name"],
-            QtCore.SIGNAL("pressed()"), self.openOutput)
+        self.projectinfo["project_output_name"].pressed.connect(self.openOutput)
         self.projectinfo["patch_name"] = QPushButton(
             self.widgetcontainer)
         self.projectinfo["patch_name"].setGeometry(
@@ -88,21 +86,19 @@ class MainWindow(QMainWindow):
             self.widgetcontainer)
         self.projectinfo["patch_value"].setGeometry(
             QRect(180, 90, 150, 25))
-        QObject.connect(self.projectinfo["patch_name"],
-            QtCore.SIGNAL("pressed()"), self.openPatch)
+        self.projectinfo["patch_name"].pressed.connect(self.openPatch)
         self.projectinfo["apply_patch"] = QPushButton(
             self.widgetcontainer)
         self.projectinfo["apply_patch"].setGeometry(
             QRect(30, 120, 300, 25))
         self.projectinfo["apply_patch"].setText(
             translations["apply_patch"]+":")
-        QObject.connect(self.projectinfo["apply_patch"],
-            QtCore.SIGNAL("pressed()"), self.applyPatch)
+        self.projectinfo["apply_patch"].pressed.connect(self.applyPatch)
         self.setCentralWidget(self.widgetcontainer)
         QMetaObject.connectSlotsByName(self)
     def openProject(self):
         projFile = QFileDialog.getOpenFileName(None, "Open PPRE Project File", 
-            filter="PPRE Project Files (*.pprj);;All Files (*.*)")
+            filter="PPRE Project Files (*.pprj);;All Files (*.*)")[0]
         if not projFile:
             return
         self.openProjectOf(projFile)
@@ -112,19 +108,19 @@ class MainWindow(QMainWindow):
         return
     def openBase(self):
         ndsFile = str(QFileDialog.getOpenFileName(None, "Open NDS ROM", 
-            filter="NDS Files (*.nds);;All Files (*.*)"))
+            filter="NDS Files (*.nds);;All Files (*.*)"))[0]
         if not ndsFile:
             return
         self.projectinfo["location_base_value"].setText(ndsFile)
     def openOutput(self):
         ndsFile = str(QFileDialog.getSaveFileName(None, "Open NDS ROM", 
-            filter="NDS Files (*.nds);;All Files (*.*)"))
+            filter="NDS Files (*.nds);;All Files (*.*)"))[0]
         if not ndsFile:
             return
         self.projectinfo["project_output_value"].setText(ndsFile)
     def openPatch(self):
         patchFile = QFileDialog.getOpenFileName(None, "Open Patch File", 
-            filter="xdelta3 Patch Files (*.xdelta3);;All Files (*.*)")
+            filter="xdelta3 Patch Files (*.xdelta3);;All Files (*.*)")[0]
         if not patchFile:
             return
         self.projectinfo["patch_value"].setText(patchFile)

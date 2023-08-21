@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os, sys, struct
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4 import QtCore, QtGui 
+
+import struct
+
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from editdlg import EditDlg, EditWidget
 
 import config
-from language import translate
+from language import translate, translations
 import pokeversion
-from nds import narc, txt
+from nds import txt
 from nds.fmt import dexfmt, evofmt
 
 files = pokeversion.pokemonfiles
@@ -43,7 +45,7 @@ class EditEVs(EditWidget):
         return value
     def getGeometry(self):
         return (self.geometry().width(), self.geometry().height())
-        
+
 class EditTMs(EditWidget):
     def __init__(self, parent=None):
         super(EditTMs, self).__init__(EditWidget.TAB, parent)
@@ -87,7 +89,7 @@ class EditTMs(EditWidget):
                 idx = i*8+j
                 values[i] |= self.valuers[idx].getValue() << j
         return struct.pack("13B", *values)
-        
+
 class EditMoves(EditWidget):
     def __init__(self, size="H", parent=None):
         super(EditMoves, self).__init__(EditWidget.NONE, parent)
@@ -110,8 +112,7 @@ class EditMoves(EditWidget):
         y += height
         self.deleter = QPushButton("X", self)
         self.deleter.setGeometry(0, 0, x, y)
-        QObject.connect(self.deleter,
-            QtCore.SIGNAL("pressed()"), self._remove)
+        self.deleter.pressed.connect(self._remove)
         self.setGeometry(0, 0, x+width, y)
     def _remove(self):
         self.remove(self)
@@ -150,11 +151,26 @@ class EditPokemon(EditDlg):
     def __init__(self, parent=None):
         super(EditPokemon, self).__init__(parent)
         game = config.project["versioninfo"][0]
-        self.personalfname = config.project["directory"]+"fs"+files[game]["Personal"]
-        self.evolutionfname = config.project["directory"]+"fs"+files[game]["Evolution"]
-        self.lvlmovesfname = config.project["directory"]+"fs"+files[game]["Moves"]
-        
+        from os.path import join
+
+        self.personalfname = join(
+            config.project["directory"],
+            "fs",
+            files[game]["Personal"]
+            )
+        self.evolutionfname = join(
+            config.project["directory"],
+            "fs",
+            files[game]["Evolution"]
+            )
+        self.lvlmovesfname = join(
+            config.project["directory"],
+            "fs",
+            files[game]["Moves"]
+            )
+
         self.pokemonnames = self.getTextEntry("Pokemon")
+        self.pokemonnames[0] = '---'
         self.typenames = self.getTextEntry("Types")
         self.itemnames = self.getTextEntry("Items")
         self.abilitynames = self.getTextEntry("Abilities")
@@ -170,9 +186,9 @@ class EditPokemon(EditDlg):
         else:
             movefmt = ["H", "move %i"]
             terminate = struct.pack("H", 0xFFFF)
-        
+
         self.addListableTab("Moveset", movefmt, self.lvlmovesfname, moveTerminator, terminate, self.getMoveWidget)
-        self.addTextTab("Flavor", self.getFlavorEntries, self.getFlavorEntry, 
+        self.addTextTab("Flavor", self.getFlavorEntries, self.getFlavorEntry,
             self.getFlavorWidget)
     def getTextEntry(self, entry):
         version = config.project["versioninfo"]
@@ -259,11 +275,11 @@ class EditPokemon(EditDlg):
         le = EditWidget(EditWidget.LINEEDIT, parent)
         le.setName(translate(name))
         return le
-        
+
 
 def create():
     if not config.project:
-        QMessageBox.critical(None, translations["error_noromloaded_title"], 
+        QMessageBox.critical(None, translations["error_noromloaded_title"],
             translations["error_noromloaded"])
         return
     EditPokemon(config.mw).show()

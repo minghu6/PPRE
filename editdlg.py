@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4 import QtCore, QtGui
+
+from os.path import join
+
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5 import QtCore
 import struct
-from string import letters
+from string import ascii_letters as letters
 
 import config
 import pokeversion
@@ -20,17 +24,17 @@ def defaultWidget(name, size, parent):
         sb.setValues([0, 0xFF])
     sb.setName(translate(name))
     return sb
-    
+
 def defaultTextWidget(section, name, parent):
     le = EditWidget(EditWidget.LINEEDIT, parent)
     le.setName(translate(name))
     return le
-    
+
 def defaultTerminator(data, length):
     if data == None:
         return True
     return False
-        
+
 class EditWidget(QWidget):
     NONE = 0
     SPINBOX = 1
@@ -51,16 +55,15 @@ class EditWidget(QWidget):
             self.setValue = self.valuer.setValue
             self.getValue = self.valuer.value
             self.setValues = self.setSpinBoxValues
-            QObject.connect(self.valuer,
-                QtCore.SIGNAL("valueChanged(int)"), self._changed)
+            self.valuer.valueChanged[int].connect(self._changed)
         elif kind == EditWidget.COMBOBOX:
             self.valuer = QComboBox(self)
             self.setValue = self.valuer.setCurrentIndex
             self.getValue = self.valuer.currentIndex
             self.setValues = self.setComboBoxValues
+            self.valuer.setEditable(True)
             self.valuer.addItem("")
-            QObject.connect(self.valuer,
-                QtCore.SIGNAL("currentIndexChanged(int)"), self._changed)
+            self.valuer.currentIndexChanged[int].connect(self._changed)
         elif kind == EditWidget.LABEL:
             self.valuer = QLabel(self)
             self.setValue = lambda x: self.valuer.setText(str(x))
@@ -69,10 +72,8 @@ class EditWidget(QWidget):
             self.valuer = QCheckBox(self)
             self.setValue = self.valuer.setChecked
             self._getValue = self.valuer.isChecked
-            QObject.connect(self.valuer,
-                QtCore.SIGNAL("toggled(bool)"), self._changed)
-            QObject.connect(self.valuer,
-                QtCore.SIGNAL("stateChanged(int)"), self._changed)
+            self.valuer.toggled[bool].connect(self._changed)
+            self.valuer.stateChanged[int].connect(self._changed)
         elif kind == EditWidget.LINEEDIT:
             self.valuer = QLineEdit(self)
             self.setValue = self.valuer.setText
@@ -92,6 +93,7 @@ class EditWidget(QWidget):
         self.valuer.setMinimum(min(values))
         self.valuer.setMaximum(max(values))
     def setComboBoxValues(self, values):
+        """ Set Pokemon Names """
         self.valuer.clear()
         self.valuer.addItems(values)
     def setValue(self, value):
@@ -105,7 +107,7 @@ class EditWidget(QWidget):
             return (self.label.geometry().width(),
                 self.label.geometry().height())
         return (self.label.geometry().width()+self.valuer.geometry().width(),
-            max([self.label.geometry().height(), 
+            max([self.label.geometry().height(),
                 self.valuer.geometry().height()]))
     def changed(self, param1=None):
         return
@@ -135,8 +137,11 @@ class EditDlg(QMainWindow):
         self.dirty = False
         self.currentchoice = 0
         game = config.project["versioninfo"][0]
-        self.textfname = config.project["directory"]+"fs"+pokeversion.textfiles[
-            game]["Main"]
+        self.textfname = join(
+            config.project["directory"],
+            "fs",
+            pokeversion.textfiles[game]["Main"]
+            )
         self.textnarc = narc.NARC(open(self.textfname, "rb").read())
         if pokeversion.gens[game] == 4:
             self.gettext = txt.gen4get
@@ -167,8 +172,8 @@ class EditDlg(QMainWindow):
         self.widgetcontainer = QWidget(self)
         self.chooser = QComboBox(self.widgetcontainer)
         self.chooser.setGeometry(QRect(50, 25, 200, 20))
-        QObject.connect(self.chooser,
-            QtCore.SIGNAL("currentIndexChanged(int)"), self.openChoice)
+        self.chooser.setEditable(True)
+        self.chooser.currentIndexChanged[int].connect(self.openChoice)
         self.currentLabel = QLabel(self.widgetcontainer)
         self.currentLabel.setGeometry(QRect(260, 25, 100, 20))
         self.tabcontainer = QTabWidget(self.widgetcontainer)
@@ -287,6 +292,7 @@ class EditDlg(QMainWindow):
                     args.append(fields[i].getValue())
                     i += 1
                 data += struct.pack(fmt[0], *args)
+            print(f'tab6: {tab[6]}')
             data += tab[6]
             tab[0].gmif.files[self.currentchoice] = data
             tab[0].toFile(open(tab[1], "wb"))
@@ -327,14 +333,14 @@ class EditDlg(QMainWindow):
     def checkClean(self, allowCancel=True):
         if self.dirty:
             if allowCancel:
-                prompt = QMessageBox.question(self, "Close?", 
+                prompt = QMessageBox.question(self, "Close?",
                     "This file has been modified.\n"+
                         "Do you want to save this file?",
                     QMessageBox.Yes, QMessageBox.No, QMessageBox.Cancel)
                 if prompt == QMessageBox.Cancel:
                     return False
             else:
-                prompt = QMessageBox.question(self, "Close?", 
+                prompt = QMessageBox.question(self, "Close?",
                     "This file has been modified.\n"+
                         "Do you want to save this file?",
                     QMessageBox.Yes, QMessageBox.No)
@@ -362,7 +368,7 @@ class EditDlg(QMainWindow):
             action.setShortcut(shortcut)
         self.menus[menuname].addAction(action)
         self.menutasks.append(action)
-        QObject.connect(action, QtCore.SIGNAL("triggered()"), callback)
+        action.triggered.connect(callback)
     def addEditableTab(self, tabname, fmt, boundfile, getwidget=defaultWidget):
         boundnarc = narc.NARC(open(boundfile, "rb").read())
         tabscroller = QScrollArea(self.tabcontainer)
@@ -373,7 +379,7 @@ class EditDlg(QMainWindow):
         ypadding = 0
         x = 5
         self.tabcontainer.addTab(tabscroller, tabname)
-        halfguess = struct.calcsize(fmt[0][:len(fmt[0])/2])
+        halfguess = struct.calcsize(fmt[0][:len(fmt[0])//2])
         for i, f in enumerate(FormatIterator(fmt[0])):
             w = getwidget(fmt[i+1][0], f, container)
             if i == halfguess:
@@ -395,7 +401,7 @@ class EditDlg(QMainWindow):
         container.setGeometry(QRect(0, 0, width*2+20, max(my, y)))
         tabscroller.setWidget(container)
         self.tabs.append([boundnarc, boundfile, fmt, fields, container])
-    def addListableTab(self, tabname, fmt, boundfile, 
+    def addListableTab(self, tabname, fmt, boundfile,
         isterminator=defaultTerminator, terminator=None,
         getwidget=defaultWidget):
         boundnarc = narc.NARC(open(boundfile, "rb").read())
@@ -409,10 +415,9 @@ class EditDlg(QMainWindow):
         tab = [boundnarc, boundfile, fmt, fields, getwidget,
             isterminator, terminator, container, adder]
         func = lambda x: (lambda: self.addToListTab(x))
-        QObject.connect(adder,
-            QtCore.SIGNAL("pressed()"), func(tab))
+        adder.pressed.connect(func(tab))
         self.listtabs.append(tab)
-    def addTextTab(self, tabname, getEntryList, getEntry, 
+    def addTextTab(self, tabname, getEntryList, getEntry,
         getwidget=defaultTextWidget):
         tabscroller = QScrollArea(self.tabcontainer)
         container = QWidget(tabscroller)
@@ -437,8 +442,8 @@ class EditDlg(QMainWindow):
         container.setGeometry(QRect(0, 0, mwidth+20, y))
         tabscroller.setWidget(container)
         self.texttabs.append([fields, getEntry, container])
-        
-        
+
+
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)

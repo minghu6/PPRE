@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os, sys, struct
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4 import QtCore, QtGui 
+
+from os.path import join
+
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from editdlg import EditDlg, EditWidget
 
 import config
-from language import translate
+from language import translate, translations
 import pokeversion
 from nds import narc, txt
 from nds.fmt import movedatafmt
@@ -19,10 +21,16 @@ class EditMoves(EditDlg):
     def __init__(self, parent=None):
         super(EditMoves, self).__init__(parent)
         game = config.project["versioninfo"][0]
-        self.wazafname = config.project["directory"]+"fs"+files[
-            game]["Moves"]
-        self.textfname = config.project["directory"]+"fs"+pokeversion.textfiles[
-            game]["Main"]
+        self.wazafname = join(
+            config.project["directory"],
+            "fs",
+            files[game]["Moves"]
+            )
+        self.textfname = join(
+            config.project["directory"],
+            "fs",
+            pokeversion.textfiles[game]["Main"]
+            )
         self.textnarc = narc.NARC(open(self.textfname, "rb").read())
         self.typenames = self.getTextEntry("Types")
         self.movenames = self.getTextEntry("Moves")
@@ -67,10 +75,10 @@ class EditMoves(EditDlg):
             sb.setValues([0, 0xFF])
         sb.setName(translate(name))
         return sb
-    
+
 def create():
     if not config.project:
-        QMessageBox.critical(None, translations["error_noromloaded_title"], 
+        QMessageBox.critical(None, translations["error_noromloaded_title"],
             translations["error_noromloaded"])
         return
     EditMoves(config.mw).show()
