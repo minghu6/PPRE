@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os
+
+import os, sys
+
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -57,7 +59,7 @@ class EditText(EditDlg):
         self.menutasks["close"] = QAction(self.menus["file"])
         self.menutasks["close"].setText(translations["menu_close"])
         self.menus["file"].addAction(self.menutasks["close"])
-        self.menutasks["close"].triggered.connect(self.quit)
+        self.menutasks["close"].triggered.connect(self.close)
         self.menubar.addAction(self.menus["file"].menuAction())
         self.menus["tools"] = QMenu(self.menubar)
         self.menus["tools"].setTitle(translations["menu_tools"])
@@ -73,19 +75,26 @@ class EditText(EditDlg):
         self.widgetcontainer.setObjectName("widgetcontainer")
         self.textfilelist = QComboBox(self.widgetcontainer)
         self.textfilelist.setGeometry(QRect(50, 25, 200, 20))
+        self.prevfile = -1
         self.textfilelist.currentIndexChanged[int].connect(self.openText)
+
         self.textedit = QTextEdit(self.widgetcontainer)
         self.textedit.setGeometry(QRect(50, 50, 500, 300))
         self.textedit.setEnabled(False)
-        self.textedit.textChanged.connect(self.changed)
+        self.textedit.textChanged.connect(self.textChanged)
+
         self.setCentralWidget(self.widgetcontainer)
         QMetaObject.connectSlotsByName(self)
 
+    def textChanged(self):
+        self.dirty=True
+
     def newText(self):
-        print("newText() Unimplemented")
+        print("newText() Unimplemented", file=sys.stderr)
+        QMessageBox.critical(None, translations["error_unimplemented"],
+                                translations["error_unimplemented"])
+
     def openTextNarc(self, f):
-        if not self.checkClean():
-            return
         self.fname = os.path.join(
             config.project["directory"],
             "fs",
@@ -96,9 +105,11 @@ class EditText(EditDlg):
         for i in range(self.narc.btaf.getEntryNum()):
             self.textfilelist.addItem(str(i))
         self.openText(0)
+
     def openText(self, i):
-        if not self.checkClean(False):
-            return
+        if self.prevfile >= 0 and self.dirty:
+            self.saveText()
+        self.prevfile = i
         self.currentfile = i
         self.textedit.setEnabled(True)
         version = config.project["versioninfo"]
@@ -111,10 +122,8 @@ class EditText(EditDlg):
             buff += entry[0]+": "+entry[1]+"\n\n"
         self.textedit.setText(buff.strip("\n"))
         self.dirty = False
-        self.updateCurrentFileLabel()
+
     def saveText(self):
-        if not self.dirty:
-            return
         version = config.project["versioninfo"]
         texts = []
         for lines in self.textedit.toPlainText().split("\n\n"):
@@ -128,40 +137,7 @@ class EditText(EditDlg):
             self.narc.gmif.files[self.currentfile] = txt.gen5put(texts)
         self.narc.toFile(open(self.fname, "wb"))
         self.dirty = False
-        self.updateCurrentFileLabel()
-        self.openText(self.currentfile)
-    def changed(self):
-        if not self.dirty:
-            self.dirty = True
-            self.updateCurrentFileLabel()
-    def updateCurrentFileLabel(self):
-        if self.dirty:
-            dirt = " [modified]"
-        else:
-            dirt = ""
-        self.setWindowTitle(EditText.wintitle%(str(self.currentfile)+dirt))
-    def quit(self):
-        if not self.checkClean():
-            return
-        self.close()
-    def checkClean(self, allowCancel=True):
-        if self.dirty:
-            if allowCancel:
-                prompt = QMessageBox.question(self, "Close?",
-                    "This text file has been modified.\n"+
-                        "Do you want to save this text file?",
-                    QMessageBox.Yes, QMessageBox.No, QMessageBox.Cancel)
-                if prompt == QMessageBox.Cancel:
-                    return False
-            else:
-                prompt = QMessageBox.question(self, "Close?",
-                    "This text file has been modified.\n"+
-                        "Do you want to save this text file?",
-                    QMessageBox.Yes, QMessageBox.No)
-            if prompt == QMessageBox.Yes:
-                if not self.saveText():
-                    return False
-        return True
+
     def search(self):
         s, ok = QInputDialog.getText(None, "Search all files", "Search (Case Insensitive)")
         if not ok or not s:
@@ -196,8 +172,12 @@ class EditText(EditDlg):
         container.setGeometry(QRect(0, 0, 600, y))
         scroller.setWidget(container)
         dlg.setCentralWidget(wdgt)
+        center_screen(dlg)
         dlg.show()
 
+    def closeEvent(self, event):
+        """ override parent """
+        self.saveText()
 
 
 def create():

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
 from os.path import join
 
 from PyQt5.QtCore import *
@@ -11,7 +12,7 @@ from string import ascii_letters as letters
 
 import config
 import pokeversion
-from language import translate
+from language import translate, translations
 from nds import narc, txt
 from nds.fmt import FormatIterator
 
@@ -140,7 +141,9 @@ class EditDlg(QMainWindow):
     wintitle = "Editor"
     def __init__(self, parent=None):
         super(EditDlg, self).__init__(parent)
+        # This mechanism (check dirty) hasn't been implemented
         self.dirty = False
+        self.prevchoice = 0
         self.currentchoice = 0
         game = config.project["versioninfo"][0]
         self.textfname = join(
@@ -171,7 +174,7 @@ class EditDlg(QMainWindow):
         self.menutasks = []
         self.addMenuEntry("file", translate("menu_new"), self.new, "CTRL+N")
         self.addMenuEntry("file", translate("menu_save"), self.save, "CTRL+S")
-        self.addMenuEntry("file", translate("menu_close"), self.quit, "CTRL+W")
+        self.addMenuEntry("file", translate("menu_close"), self.close, "CTRL+W")
         self.menubar.addAction(self.menus["file"].menuAction())
         self.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(self)
@@ -229,6 +232,9 @@ class EditDlg(QMainWindow):
             tab[3].append(w)
         self.sortLists()
     def openChoice(self, i):
+        if self.prevchoice:
+            self.save()
+        self.prevchoice = self.currentchoice
         self.currentchoice = i
         self.currentLabel.setText("File ID: %i"%i)
         for tab in self.tabs:
@@ -277,8 +283,6 @@ class EditDlg(QMainWindow):
         self.dirty = False
         self.updateWindowTitle()
     def save(self):
-        if not self.dirty:
-            return
         for tab in self.tabs:
             fmt = tab[2]
             fields = tab[3]
@@ -292,14 +296,13 @@ class EditDlg(QMainWindow):
             fmt = tab[2]
             fields = tab[3]
             i = 0
-            data = ""
+            data = b""
             while i < len(fields):
                 args = []
                 for j, fieldname in enumerate(fmt[1:]):
                     args.append(fields[i].getValue())
                     i += 1
                 data += struct.pack(fmt[0], *args)
-            print(f'tab6: {tab[6]}')
             data += tab[6]
             tab[0].gmif.files[self.currentchoice] = data
             tab[0].toFile(open(tab[1], "wb"))
@@ -328,38 +331,13 @@ class EditDlg(QMainWindow):
         self.dirty = False
         self.updateWindowTitle()
     def new(self):
-        print("new() not implemented")
-    def quit(self):
-        if not self.checkClean():
-            return
-        self.close()
+        print("new() not implemented", file=sys.stderr)
+        QMessageBox.critical(None, translations["error_unimplemented"],
+                                translations["error_unimplemented"])
+
     def closeEvent(self, event):
-        if not self.checkClean():
-            event.ignore()
-        event.accept()
-    def checkClean(self, allowCancel=True):
-        if self.dirty:
-            if allowCancel:
-                prompt = QMessageBox.question(self, "Close?",
-                    "This file has been modified.\n"+
-                        "Do you want to save this file?",
-                    QMessageBox.Yes, QMessageBox.No, QMessageBox.Cancel)
-                if prompt == QMessageBox.Cancel:
-                    return False
-            else:
-                prompt = QMessageBox.question(self, "Close?",
-                    "This file has been modified.\n"+
-                        "Do you want to save this file?",
-                    QMessageBox.Yes, QMessageBox.No)
-            if prompt == QMessageBox.Yes:
-                if not self.save():
-                    return False
-        return True
-    def changed(self, param1=None):
-        if self.dirty:
-            return
-        self.dirty = True
-        self.updateWindowTitle()
+        self.save()
+
     def updateWindowTitle(self, text=None):
         if self.dirty:
             dirt = " [modified]"
@@ -397,12 +375,10 @@ class EditDlg(QMainWindow):
                 scr = QScrollArea(self.tabcontainer)
                 scr.setWidget(w)
                 self.tabcontainer.addTab(scr, w.tabname)
-                w.changed = self.changed
                 fields.append(w)
                 continue
             width, height = w.getGeometry()
             w.setGeometry(QRect(x, y, width, height))
-            w.changed = self.changed
             fields.append(w)
             y += ypadding + height
         container.setGeometry(QRect(0, 0, width*2+20, max(my, y)))
@@ -442,7 +418,6 @@ class EditDlg(QMainWindow):
                 w = getwidget(section[0], entry, container)
                 width, height = w.getGeometry()
                 w.setGeometry(QRect(x, y, width, height))
-                w.changed = self.changed
                 fields.append([section[0], entry, w])
                 y += ypadding + height
                 mwidth = max(mwidth, width)
