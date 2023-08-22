@@ -30,7 +30,7 @@ if "--help" in sys.argv or "-h" in sys.argv:
     print("""Project Pokemon ROM Editor 2 - 2023
 Usage: %s [options]
 Options:
- --load/-l project.pprj     Loads a project
+ --load/-l <dir>     Loads a project folder
  --new /-n ndsfile.nds      Creates a new project from a ROM
  --dlg /-d dialog           Starts a dialog
 
@@ -47,26 +47,37 @@ class MainWindow(QMainWindow):
         self.parent = parent
         self.app = app
         self._projFolder = None
+        self.openedHisRecorder = config.OpenedHistoyRecorder()
         config.mw = self
         self.setupUi()
         self.dirty = False
         args = sys.argv[1:]
-        while args:
-            arg = args.pop(0)
-            if arg in ["-l", "--load"]:
-                self.openProjectOf(args.pop(0))
-            elif arg in ["-n", "--new"]:
-                self.newProjectOf(args.pop(0))
-            elif arg in ["-d", "--dialog"]:
+
+        if args:
+            while args:
                 arg = args.pop(0)
-                if arg == "home":
-                    pass
-                elif arg == "texteditor":
-                    edittext.create()
-                elif arg == "pokemoneditor":
-                    editpokemon.create()
-            else:
-                print("Unrecognized argument: %s" % arg)
+                if arg in ["-l", "--load"]:
+                    self.projFolder = args.pop(0)
+                    self.openProjectOf()
+                elif arg in ["-n", "--new"]:
+                    self.newProjectOf(args.pop(0))
+                elif arg in ["-d", "--dialog"]:
+                    arg = args.pop(0)
+                    if arg == "home":
+                        pass
+                    elif arg == "texteditor":
+                        edittext.create()
+                    elif arg == "pokemoneditor":
+                        editpokemon.create()
+                else:
+                    print("Unrecognized argument: %s" % arg)
+        else:
+            records = self.openedHisRecorder.fetch()
+
+            if records:
+                self.projFolder = records[0]
+                print(self.projFolder)
+                self.openProjectOf()
 
     def setupUi(self):
         self.setObjectName("MainWindow")
@@ -101,10 +112,6 @@ class MainWindow(QMainWindow):
         self.menutasks["exportrom"].setText(translations["menu_exportrom"])
         self.menus["file"].addAction(self.menutasks["exportrom"])
         self.menutasks["exportrom"].triggered.connect(self.exportRom)
-        # self.menutasks["exportromas"] = QAction(self.menus["file"])
-        # self.menutasks["exportromas"].setText(translations["menu_exportromas"])
-        # self.menus["file"].addAction(self.menutasks["exportromas"])
-        # self.menutasks["exportromas"].triggered.connect(self.exportRomAs)
 
         self.menutasks["makepatch"] = QAction(self.menus["file"])
         self.menutasks["makepatch"].setText(translations["menu_makepatch"])
@@ -167,6 +174,7 @@ class MainWindow(QMainWindow):
     def projFolder(self, val):
         self._projFolder = val
         self.projFile = os.path.join(self._projFolder, '.pprj')
+        self.openedHisRecorder.push(self.projFolder)
 
     def openProject(self):
         projFolder = QFileDialog.getExistingDirectory(
@@ -183,6 +191,7 @@ class MainWindow(QMainWindow):
                         config.qtSetter, self.projectinfo)
         else:
             self.set_default_projectinfo()
+
         self.set_project_config()
 
     def newProject(self):
@@ -196,6 +205,7 @@ class MainWindow(QMainWindow):
         name = os.path.splitext(tail)[0]
         d = os.path.join(d, name)
         self.projFolder = d
+
         if os.path.exists(d):
             prompt = QMessageBox.question(None, "Overwrite directory?",
                                           "%s already exists. Would you like this " % d.rstrip("/") +
@@ -272,6 +282,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, a0: QCloseEvent) -> None:
         self.saveProject()
+        self.openedHisRecorder.save()
         super().closeEvent(a0)
 
 

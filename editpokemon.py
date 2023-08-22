@@ -195,8 +195,11 @@ class EditPokemon(EditDlg):
 
     def getTextEntry(self, entry):
         version = config.project["versioninfo"]
-        entrynum = pokeversion.textentries[version[0]][pokeversion.langs[
-            version[1]]][entry]
+
+        lang = pokeversion.langs[version[1]]
+        game_ver = pokeversion.textentries[version[0]]
+        entrynum = game_ver.get(lang, game_ver['English'])[entry]
+
         if pokeversion.gens[version[0]] == 4:
             text = txt.gen4get(self.textnarc.gmif.files[entrynum])
         elif pokeversion.gens[version[0]] == 5:

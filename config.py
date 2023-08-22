@@ -1,3 +1,7 @@
+import pathlib
+import csv
+from typing import List
+
 from compat import configparser
 
 # config version
@@ -20,6 +24,8 @@ options = {
 }
 
 defaults = {'origin_nds_fn': 'base.nds'}
+home_dir: pathlib.Path = pathlib.Path.home().joinpath('.ppre2')
+home_dir.mkdir(exist_ok=True)
 
 
 def qtSetter(s, o, v, meta):
@@ -52,6 +58,49 @@ def write(f, getter, meta=None):
 project = None
 mw = None
 
+
+class OpenedHistoyRecorder:
+    """ A fixed capacity opened folder history recorder using LRU algorithm """
+
+    limit = 6
+
+    def __init__(self) -> None:
+        self.his = {}
+        self.his_file = home_dir.joinpath('opened_history')
+
+        if self.his_file.exists():
+            with open(self.his_file) as fr:
+                for ln in csv.reader(fr):
+                    self.his[ln[0]] = int(ln[1])
+
+    def push(self, record: str):
+        for k in self.his:
+            if k != record:
+                self.his[k] += 1
+            else:
+                self.his[k] = 0
+
+        self.his[record] = 0
+
+        if len(self.his) > OpenedHistoyRecorder.limit:
+           k, _ = max(self.his.items(), key=lambda x: x[1])
+
+           self.his.pop(k)
+
+    def fetch(self) -> List[str]:
+        return list(map(lambda x: x[0], sorted(self.his.items(), key=lambda x: x[1])))
+
+    def drop(self, k: str):
+        self.his.pop(k)
+
+    def save(self):
+        with open(self.his_file, 'w') as fw:
+            csv.writer(fw).writerows(self.his.items())
+
+
+
 if __name__ == "__main__":
-    with open("sample.pprj", "w") as f:
-        write(f, lambda x, y: "")
+    recorder = OpenedHistoyRecorder()
+    recorder.save()
+
+
