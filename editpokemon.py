@@ -170,7 +170,7 @@ class EditPokemon(EditDlg):
             )
 
         self.pokemonnames = self.getTextEntry("Pokemon")
-        self.pokemonnames[0] = '---'
+        self.pokemonnames[0] = '-'
         self.typenames = self.getTextEntry("Types")
         self.itemnames = self.getTextEntry("Items")
         self.abilitynames = self.getTextEntry("Abilities")

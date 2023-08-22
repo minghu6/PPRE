@@ -20,6 +20,7 @@ translations = {
 "menu_new":"New File",
 "menu_save":"Save File",
 "menu_search":"Search",
+"menu_open_recently":"&Open Recently",
 "config_location_base_name":"Base ROM",
 "config_location_directory_name":"Directory",
 "config_project_description_name":"Project Description",

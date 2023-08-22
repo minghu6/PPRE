@@ -57,8 +57,7 @@ class MainWindow(QMainWindow):
             while args:
                 arg = args.pop(0)
                 if arg in ["-l", "--load"]:
-                    self.projFolder = args.pop(0)
-                    self.openProjectOf()
+                    self.openProjectOf(args.pop(0))
                 elif arg in ["-n", "--new"]:
                     self.newProjectOf(args.pop(0))
                 elif arg in ["-d", "--dialog"]:
@@ -75,9 +74,7 @@ class MainWindow(QMainWindow):
             records = self.openedHisRecorder.fetch()
 
             if records:
-                self.projFolder = records[0]
-                print(self.projFolder)
-                self.openProjectOf()
+                self.openProjectOf(records[0])
 
     def setupUi(self):
         self.setObjectName("MainWindow")
@@ -107,6 +104,18 @@ class MainWindow(QMainWindow):
         self.menutasks["openproject"].setShortcut("CTRL+O")
         self.menus["file"].addAction(self.menutasks["openproject"])
         self.menutasks["openproject"].triggered.connect(self.openProject)
+
+        open_recently_menu = QMenu(self.menus["file"])
+        open_recently_menu.setTitle(translations["menu_open_recently"])
+
+        for rec in self.openedHisRecorder.fetch()[1:]:
+            act = QAction(rec, parent=open_recently_menu)
+            open_recently_menu.addAction(act)
+
+        open_recently_menu.triggered.connect(lambda action: self.openProjectOf(action.text()))
+
+        self.menutasks['open_recently'] = open_recently_menu
+        self.menus["file"].addMenu(self.menutasks["open_recently"])
 
         self.menutasks["exportrom"] = QAction(self.menus["file"])
         self.menutasks["exportrom"].setText(translations["menu_exportrom"])
@@ -182,10 +191,11 @@ class MainWindow(QMainWindow):
             "Open PPRE Project Folder"
         )
         if projFolder:
-            self.projFolder = projFolder
-            self.openProjectOf()
+            self.openProjectOf(projFolder)
 
-    def openProjectOf(self):
+    def openProjectOf(self, projFolder):
+        self.projFolder = projFolder
+
         if os.path.exists(self.projFile):
             config.load(open(self.projFile, "r"),
                         config.qtSetter, self.projectinfo)

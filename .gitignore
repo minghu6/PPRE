@@ -3,6 +3,8 @@ __pycache__
 *.nds
 nds/*
 nds
-.vscode
+.vscode/
 *.pprj
 *.ipynb
+draft/
+
