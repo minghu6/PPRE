@@ -5,4 +5,4 @@ nds/*
 nds
 .vscode
 *.pprj
-
+*.ipynb

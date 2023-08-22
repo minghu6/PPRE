@@ -197,8 +197,8 @@ class EditPokemon(EditDlg):
         version = config.project["versioninfo"]
 
         lang = pokeversion.langs[version[1]]
-        game_ver = pokeversion.textentries[version[0]]
-        entrynum = game_ver.get(lang, game_ver['English'])[entry]
+        game = pokeversion.textentries[version[0]]
+        entrynum = game.get(lang, game['English'])[entry]
 
         if pokeversion.gens[version[0]] == 4:
             text = txt.gen4get(self.textnarc.gmif.files[entrynum])
@@ -260,16 +260,22 @@ class EditPokemon(EditDlg):
         return w
     def getFlavorEntries(self):
         version = config.project["versioninfo"]
-        texts = pokeversion.textentries[version[0]][
-                    pokeversion.langs[version[1]]]
+
+        lang = pokeversion.langs[version[1]]
+        game = pokeversion.textentries[version[0]]
+        texts = game.get(lang, game['English'])
+
         ret = []
         ret.append(("names", texts["PokemonNames"].keys()))
         ret.append(("flavor", sorted(texts["Flavor"].keys())))
         return ret
     def getFlavorEntry(self, section, name, i):
         version = config.project["versioninfo"]
-        texts = pokeversion.textentries[version[0]][
-                    pokeversion.langs[version[1]]]
+
+        lang = pokeversion.langs[version[1]]
+        game = pokeversion.textentries[version[0]]
+        texts = game.get(lang, game['English'])
+
         if section == "flavor":
             return (texts["Flavor"][name], "0_"+str(i))
         return (texts["PokemonNames"][name], "0_"+str(i))

@@ -5,7 +5,7 @@ def setLanguage(lang):
     global translations
     newlang = __import__(lang)
     translations = newlang.translations
-    
+
 def unsetLanguage():
     global translations
     translations = defaulttranslations

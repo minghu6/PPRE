@@ -42,8 +42,11 @@ class EditMoves(EditDlg):
 
     def getTextEntry(self, entry):
         version = config.project["versioninfo"]
-        entrynum = pokeversion.textentries[version[0]][pokeversion.langs[
-            version[1]]][entry]
+
+        lang = pokeversion.langs[version[1]]
+        game = pokeversion.textentries[version[0]]
+        entrynum = game.get(lang, game['English'])[entry]
+
         if pokeversion.gens[version[0]] == 4:
             text = txt.gen4get(self.textnarc.gmif.files[entrynum])
         elif pokeversion.gens[version[0]] == 5:
