@@ -6,7 +6,6 @@ from os.path import join
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-from PyQt5 import QtCore
 import struct
 from string import ascii_letters as letters
 
@@ -34,6 +33,13 @@ def defaultTerminator(data, length):
     if data == None:
         return True
     return False
+
+def center_screen(qobj: QWidget):
+    """ It doesn't works on wayland environment """
+    c0 = QGuiApplication.primaryScreen().geometry().center()
+    c1 = qobj.frameGeometry().center()
+
+    qobj.move(c0-c1)
 
 class EditWidget(QWidget):
     NONE = 0
@@ -150,6 +156,7 @@ class EditDlg(QMainWindow):
             self.gettext = txt.gen5get
             self.puttext = txt.gen5put
         self.setupUi()
+
     def setupUi(self):
         self.setObjectName("EditDlg")
         self.resize(600, 400)

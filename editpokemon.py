@@ -6,7 +6,7 @@ import struct
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from editdlg import EditDlg, EditWidget
+from editdlg import EditDlg, EditWidget, center_screen
 
 import config
 from language import translate, translations
@@ -190,6 +190,9 @@ class EditPokemon(EditDlg):
         self.addListableTab("Moveset", movefmt, self.lvlmovesfname, moveTerminator, terminate, self.getMoveWidget)
         self.addTextTab("Flavor", self.getFlavorEntries, self.getFlavorEntry,
             self.getFlavorWidget)
+
+        center_screen(self)
+
     def getTextEntry(self, entry):
         version = config.project["versioninfo"]
         entrynum = pokeversion.textentries[version[0]][pokeversion.langs[

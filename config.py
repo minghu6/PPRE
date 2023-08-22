@@ -1,6 +1,6 @@
 from compat import configparser
 
-#config version
+# config version
 version = 1
 
 """options = {
@@ -15,15 +15,20 @@ version = 1
 
 sections = ["location", "project"]
 options = {
-    "location": ["base", "directory"],
+    "location": ["directory"],
     "project": ["name", "description", "version", "output"],
 }
 
+defaults = {'origin_nds_fn': 'base.nds'}
+
+
 def qtSetter(s, o, v, meta):
     meta[s+"_"+o+"_value"].setText(v)
-    
+
+
 def qtGetter(s, o, meta):
     return str(meta[s+"_"+o+"_value"].text())
+
 
 def load(f, setter, meta=None):
     parser = configparser.ConfigParser()
@@ -31,7 +36,8 @@ def load(f, setter, meta=None):
     for s in sections:
         for o in options[s]:
             setter(s, o, parser.get(s, o), meta)
-    
+
+
 def write(f, getter, meta=None):
     parser = configparser.ConfigParser()
     parser.add_section("config")
@@ -41,10 +47,11 @@ def write(f, getter, meta=None):
         for o in options[s]:
             parser.set(s, o, getter(s, o, meta))
     parser.write(f)
-    
+
+
 project = None
 mw = None
-    
+
 if __name__ == "__main__":
     with open("sample.pprj", "w") as f:
-        write(f, lambda x, y:"")
+        write(f, lambda x, y: "")

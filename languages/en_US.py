@@ -25,7 +25,7 @@ translations = {
 "config_project_description_name":"Project Description",
 "config_project_name_name":"Project Name",
 "config_project_version_name":"Project Version",
-"config_project_output_name":"Project ROM",
+"config_project_output_name":"Output ROM",
 "patch_name":"Patch File",
 "output_rom":"Output ROM",
 "apply_patch":"Apply Patch",
@@ -69,9 +69,9 @@ translations = {
 "pokemontm":"TM",
 "pokemonhm":"HM",
 "pokemonevolutionmethods":["None", "Friendship", "Friendship (Day)",
-    "Friendship (Night)", "Level", "Trade", "Trade (Item)", "Use Item", 
-    "Level (Atk > Def)", "Level (Atk=Def)", "Level (Atk < Def)", 
-    "Level (PID < 5)", "Level (PID > 4)", "Level (1 of 2)", "Level (2 of 2)", 
+    "Friendship (Night)", "Level", "Trade", "Trade (Item)", "Use Item",
+    "Level (Atk > Def)", "Level (Atk=Def)", "Level (Atk < Def)",
+    "Level (PID < 5)", "Level (PID > 4)", "Level (1 of 2)", "Level (2 of 2)",
     "Beauty", "Use Item(Male)", "Use Item(Female)", "Level Up Day, holding",
     "Level Up Night, holding", "Know Attack", "Party Pokemon",
     "Level (Male)", "Level (Female)", "Level Up at Mt. Coronet",
@@ -80,5 +80,5 @@ translations = {
 "movecontesttypes":["Cool", "Beauty", "Cute", "Smart", "Tough"],
 "names":"Names",
 "flavor":"Flavor",
-    
+
 }

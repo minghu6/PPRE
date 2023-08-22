@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os, sys
+import os
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from PyQt5 import QtCore
 
+from editdlg import EditDlg, center_screen
 import config
 from language import translations
 import pokeversion
@@ -13,17 +13,21 @@ from nds import narc, txt
 
 files = pokeversion.textfiles
 
-wintitle = "%s - Text Editor - PPRE"
+class EditText(EditDlg):
+    wintitle = "%s - Text Editor - PPRE"
 
-class EditText(QMainWindow):
     def __init__(self, parent=None):
         super(EditText, self).__init__(parent)
+
         self.setupUi()
         self.dirty = False
         self.openTextNarc("Main")
+        # Why it doesn't works in `setupUi` ?
+        center_screen(self)
+
     def setupUi(self):
         self.setObjectName("EditText")
-        self.setWindowTitle(wintitle%"No file opened")
+        self.setWindowTitle(EditText.wintitle % "No file opened")
         self.resize(600, 400)
         icon = QIcon()
         icon.addPixmap(QPixmap("PPRE.ico"), QIcon.Normal, QIcon.Off)
@@ -76,6 +80,7 @@ class EditText(QMainWindow):
         self.textedit.textChanged.connect(self.changed)
         self.setCentralWidget(self.widgetcontainer)
         QMetaObject.connectSlotsByName(self)
+
     def newText(self):
         print("newText() Unimplemented")
     def openTextNarc(self, f):
@@ -134,7 +139,7 @@ class EditText(QMainWindow):
             dirt = " [modified]"
         else:
             dirt = ""
-        self.setWindowTitle(wintitle%(str(self.currentfile)+dirt))
+        self.setWindowTitle(EditText.wintitle%(str(self.currentfile)+dirt))
     def quit(self):
         if not self.checkClean():
             return
@@ -192,7 +197,6 @@ class EditText(QMainWindow):
         scroller.setWidget(container)
         dlg.setCentralWidget(wdgt)
         dlg.show()
-
 
 
 

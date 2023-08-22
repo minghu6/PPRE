@@ -1,27 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os, sys
-from PyQt5.QtWidgets import *
+import os
+import sys
 import shutil
+
+from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from PyQt5 import QtCore
 
 from compat import *
 import config
 from language import translations
-import ndstool, xdelta3
+import ndstool
+import xdelta3
 import pokeversion
 
-import edittext, editpokemon, editmoves
+import edittext
+import editpokemon
+import editmoves
+import editdlg
 
 class version:
-    major = 2
+    major = 0
     minor = 2
     revision = 0
 
+
 if "--help" in sys.argv or "-h" in sys.argv:
-    print("""Project Pokemon ROM Editor 2 - 2012
+    print("""Project Pokemon ROM Editor 2 - 2023
 Usage: %s [options]
 Options:
  --load/-l project.pprj     Loads a project
@@ -31,15 +37,16 @@ Options:
 Dialogs:
  home                       Main Window
  texteditor                 Text Editor
- pokemoneditor              Pokemon Editor"""%(sys.argv[0]))
+ pokemoneditor              Pokemon Editor""" % (sys.argv[0]))
     exit()
+
 
 class MainWindow(QMainWindow):
     def __init__(self, app, parent=None):
-        super(MainWindow, self).__init__(parent)
+        super().__init__(parent)
         self.parent = parent
         self.app = app
-        self.projFile = None
+        self._projFolder = None
         config.mw = self
         self.setupUi()
         self.dirty = False
@@ -59,15 +66,15 @@ class MainWindow(QMainWindow):
                 elif arg == "pokemoneditor":
                     editpokemon.create()
             else:
-                print("Unrecognized argument: %s"%arg)
+                print("Unrecognized argument: %s" % arg)
+
     def setupUi(self):
         self.setObjectName("MainWindow")
-        self.setWindowTitle("PPRE %i.%i.%i"%
-            (version.major, version.minor, version.revision))
+        self.setWindowTitle("PPRE-II v%i.%i.%i" %
+                            (version.major, version.minor, version.revision))
         self.app.setApplicationName("PPRE")
-        self.app.setApplicationVersion("%i.%i.%i"%
-            (version.major, version.minor, version.revision))
-        self.resize(600, 400)
+        self.app.setApplicationVersion("%i.%i.%i" %
+                                       (version.major, version.minor, version.revision))
         icon = QIcon()
         icon.addPixmap(QPixmap("PPRE.ico"), QIcon.Normal, QIcon.Off)
         self.setWindowIcon(icon)
@@ -83,38 +90,33 @@ class MainWindow(QMainWindow):
         self.menutasks["newproject"].setShortcut("CTRL+N")
         self.menus["file"].addAction(self.menutasks["newproject"])
         self.menutasks["newproject"].triggered.connect(self.newProject)
+
         self.menutasks["openproject"] = QAction(self.menus["file"])
         self.menutasks["openproject"].setText(translations["menu_openproject"])
         self.menutasks["openproject"].setShortcut("CTRL+O")
         self.menus["file"].addAction(self.menutasks["openproject"])
         self.menutasks["openproject"].triggered.connect(self.openProject)
-        self.menutasks["saveproject"] = QAction(self.menus["file"])
-        self.menutasks["saveproject"].setText(translations["menu_saveproject"])
-        self.menutasks["saveproject"].setShortcut("CTRL+S")
-        self.menus["file"].addAction(self.menutasks["saveproject"])
-        self.menutasks["saveproject"].triggered.connect(self.saveProject)
-        self.menutasks["saveprojectas"] = QAction(self.menus["file"])
-        self.menutasks["saveprojectas"].setText(translations["menu_saveprojectas"])
-        self.menutasks["saveprojectas"].setShortcut("CTRL+SHIFT+S")
-        self.menus["file"].addAction(self.menutasks["saveprojectas"])
-        self.menutasks["saveprojectas"].triggered.connect(self.saveProjectAs)
+
         self.menutasks["exportrom"] = QAction(self.menus["file"])
         self.menutasks["exportrom"].setText(translations["menu_exportrom"])
         self.menus["file"].addAction(self.menutasks["exportrom"])
         self.menutasks["exportrom"].triggered.connect(self.exportRom)
-        self.menutasks["exportromas"] = QAction(self.menus["file"])
-        self.menutasks["exportromas"].setText(translations["menu_exportromas"])
-        self.menus["file"].addAction(self.menutasks["exportromas"])
-        self.menutasks["exportromas"].triggered.connect(self.exportRomAs)
+        # self.menutasks["exportromas"] = QAction(self.menus["file"])
+        # self.menutasks["exportromas"].setText(translations["menu_exportromas"])
+        # self.menus["file"].addAction(self.menutasks["exportromas"])
+        # self.menutasks["exportromas"].triggered.connect(self.exportRomAs)
+
         self.menutasks["makepatch"] = QAction(self.menus["file"])
         self.menutasks["makepatch"].setText(translations["menu_makepatch"])
         self.menus["file"].addAction(self.menutasks["makepatch"])
         self.menutasks["makepatch"].triggered.connect(self.makePatch)
+
         self.menutasks["quit"] = QAction(self.menus["file"])
         self.menutasks["quit"].setText(translations["menu_quit"])
         self.menutasks["quit"].setShortcut("CTRL+Q")
         self.menus["file"].addAction(self.menutasks["quit"])
-        self.menutasks["quit"].triggered.connect(self.quit)
+        self.menutasks["quit"].triggered.connect(lambda: self.close())
+
         self.menubar.addAction(self.menus["file"].menuAction())
         self.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(self)
@@ -145,43 +147,61 @@ class MainWindow(QMainWindow):
                 self.projectinfo[sect+"_"+opt+"_name"].setGeometry(
                     QRect(30, 30*(i+1), 150, 25))
                 self.projectinfo[sect+"_"+opt+"_name"].setText(
-                    translations["config_%s_name"%(sect+"_"+opt)]+":")
+                    translations["config_%s_name" % (sect+"_"+opt)]+":")
                 self.projectinfo[sect+"_"+opt+"_value"] = QLineEdit(
                     self.widgetcontainer)
                 self.projectinfo[sect+"_"+opt+"_value"].setGeometry(
                     QRect(180, 30*(i+1), 150, 25))
                 i += 1
+        self.projectinfo['location_directory_value'].setReadOnly(True)
         self.setCentralWidget(self.widgetcontainer)
         QMetaObject.connectSlotsByName(self)
+        self.resize(600, 400)
+        editdlg.center_screen(self)
+
+    @property
+    def projFolder(self):
+        return self._projFolder
+
+    @projFolder.setter
+    def projFolder(self, val):
+        self._projFolder = val
+        self.projFile = os.path.join(self._projFolder, '.pprj')
+
     def openProject(self):
-        projFile = QFileDialog.getOpenFileName(None, "Open PPRE Project File (*.pprj)",
-            filter="PPRE Project Files (*.pprj);;All Files (*.*)")[0]
-        if not projFile:
-            return
-        self.openProjectOf(projFile)
-    def openProjectOf(self, projFile):
-        self.projFile = projFile
-        config.load(open(projFile, "r"), config.qtSetter, self.projectinfo)
-        config.project = {"directory":
-            self.projectinfo["location_directory_value"].text()}
-        config.project["versioninfo"] = pokeversion.get()
-        return
+        projFolder = QFileDialog.getExistingDirectory(
+            None,
+            "Open PPRE Project Folder"
+        )
+        if projFolder:
+            self.projFolder = projFolder
+            self.openProjectOf()
+
+    def openProjectOf(self):
+        if os.path.exists(self.projFile):
+            config.load(open(self.projFile, "r"),
+                        config.qtSetter, self.projectinfo)
+        else:
+            self.set_default_projectinfo()
+        self.set_project_config()
+
     def newProject(self):
         ndsFile = QFileDialog.getOpenFileName(None, "Open NDS ROM",
-            filter="NDS Files (*.nds);;All Files (*.*)")[0]
-        if not ndsFile:
-            return
-        self.newProjectOf(ndsFile)
+                                              filter="NDS Files (*.nds);;All Files (*.*)")[0]
+        if ndsFile:
+            self.newProjectOf(ndsFile)
+
     def newProjectOf(self, ndsFile):
         d, tail = os.path.split(os.path.abspath(ndsFile))
         name = os.path.splitext(tail)[0]
         d = os.path.join(d, name)
+        self.projFolder = d
         if os.path.exists(d):
             prompt = QMessageBox.question(None, "Overwrite directory?",
-                "%s already exists. Would you like this "%d.rstrip("/")+
-                    "to be overwritten with the project directory?\n"+
-                    "All contents will be deleted. This cannot be undone.",
-                QMessageBox.Yes, QMessageBox.No)
+                                          "%s already exists. Would you like this " % d.rstrip("/") +
+                                          "to be overwritten with the project directory?\n" +
+                                          "All contents will be deleted. This cannot be undone.",
+                                          QMessageBox.Yes, QMessageBox.No)
             if prompt == QMessageBox.Yes:
                 if os.path.isdir(d):
                     shutil.rmtree(d)
@@ -192,87 +212,77 @@ class MainWindow(QMainWindow):
         os.makedirs(d)
         ndstool.dump(ndsFile, d)
         self.dirty = True
-        prompt = QMessageBox.question(None, "Create backup?",
-            "Would you like to create a backup of this ROM in your "+
-                "project directory?",
-            QMessageBox.Yes, QMessageBox.No)
-        if prompt == QMessageBox.Yes:
-            shutil.copyfile(ndsFile, os.path.join(d, "base.nds"))
-        self.projectinfo["location_base_value"].setText(os.path.join(d, "base.nds"))
-        self.projectinfo["location_directory_value"].setText(d)
-        self.projectinfo["project_name_value"].setText(name.title())
-        self.projectinfo["project_output_value"].setText(os.path.join(d, tail))
-        config.project = {"directory":
-            self.projectinfo["location_directory_value"].text()}
-        config.project["versioninfo"] = pokeversion.get()
+        self.set_default_projectinfo()
+        self.set_project_config()
+
+    def set_default_projectinfo(self):
+        """ After projFolder is set """
+
+        folderName = os.path.basename(self.projFolder)
+
+        self.projectinfo["location_directory_value"].setText(self.projFolder)
+        self.projectinfo["project_name_value"].setText(folderName)
+        self.projectinfo["project_output_value"].setText(os.path.join(self.projFolder, folderName+'.nds'))
+
+    def set_project_config(self):
+        config.project = {"directory": self.projFolder}
+        config.project["versioninfo"] = pokeversion.get(self.projFolder)
+
     def saveProject(self):
-        if not self.projFile:
-            self.saveProjectAs()
-        else:
-            self.saveProjectOf(self.projFile)
-    def saveProjectAs(self):
-        projFile = QFileDialog.getSaveFileName(None, "Save PPRE Project File",
-            filter="PPRE Project Files (*.pprj);;All Files (*.*)")[0]
-        if not projFile:
-            return
-        self.projFile = projFile
-        self.saveProjectOf(projFile)
-    def saveProjectOf(self, projFile):
-        config.write(open(projFile, "w"), config.qtGetter, self.projectinfo)
-        self.dirty = False
-        return
+        if self.projFolder:
+            config.write(open(self.projFile, "w"),
+                         config.qtGetter, self.projectinfo)
+            self.dirty = False
+
     def exportRom(self):
         self.exportRomTo(self.projectinfo["project_output_value"].text())
+
     def exportRomAs(self):
         ndsFile = str(QFileDialog.getSaveFileName(None, "Open Save ROM",
-            filter="NDS Files (*.nds);;All Files (*.*)"))[0]
-        if not ndsFile:
-            return
-        self.exportRomTo(ndsFile)
+                                                  filter="NDS Files (*.nds);;All Files (*.*)"))[0]
+        if ndsFile:
+            self.exportRomTo(ndsFile)
+
     def exportRomTo(self, output):
         if not config.project:
             QMessageBox.critical(None, translations["error_noromloaded_title"],
-                translations["error_noromloaded"])
+                                 translations["error_noromloaded"])
             return
         ndstool.build(output, config.project["directory"])
-        return
+
     def makePatch(self):
         if not config.project:
             QMessageBox.critical(None, translations["error_noromloaded_title"],
-                translations["error_noromloaded"])
+                                 translations["error_noromloaded"])
         inrom = str(self.projectinfo["location_base_value"].text())
         outrom = str(self.projectinfo["project_output_value"].text())
         if not os.path.exists(inrom):
             QMessageBox.critical(None, translations["error_noromloaded_title"],
-                translations["error_nooriginalrom"])
+                                 translations["error_nooriginalrom"])
             return
         if not os.path.exists(outrom):
             QMessageBox.critical(None, translations["error_noromloaded_title"],
-                translations["error_nonewrom"])
+                                 translations["error_nonewrom"])
             return
         patchFile = QFileDialog.getSaveFileName(None, "Save Patch File",
-            filter="xdelta3 Patch Files (*.xdelta3);;All Files (*.*)")[0]
+                                                filter="xdelta3 Patch Files (*.xdelta3);;All Files (*.*)")[0]
         if not patchFile:
             return
         xdelta3.makePatch(patchFile, inrom, outrom)
-    def quit(self):
-        if self.dirty:
-            prompt = QMessageBox.question(None, "Close?",
-                "Your project has been modified.\n"+
-                    "Do you want to save your project file?",
-                QMessageBox.Yes, QMessageBox.No, QMessageBox.Cancel)
-            if prompt == QMessageBox.Cancel:
-                return
-            if prompt == QMessageBox.Yes:
-                self.saveProject()
-        exit(0)
+
+    def closeEvent(self, a0: QCloseEvent) -> None:
+        self.saveProject()
+        super().closeEvent(a0)
 
 
 if __name__ == '__main__':
     import signal
+
+    # For convenience
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     app = QApplication(sys.argv)
     mw = MainWindow(app)
+
     mw.show()
     app.exec()

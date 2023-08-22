@@ -6,7 +6,7 @@ from os.path import join
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from editdlg import EditDlg, EditWidget
+from editdlg import EditDlg, EditWidget, center_screen
 
 import config
 from language import translate, translations
@@ -37,6 +37,9 @@ class EditMoves(EditDlg):
         self.chooser.addItems(self.movenames)
         self.addEditableTab("General", movedatafmt[game.lower()],
             self.wazafname, self.getMoveWidget)
+
+        center_screen(self)
+
     def getTextEntry(self, entry):
         version = config.project["versioninfo"]
         entrynum = pokeversion.textentries[version[0]][pokeversion.langs[
