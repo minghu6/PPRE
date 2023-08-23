@@ -1,8 +1,8 @@
 *.pyc
 __pycache__
 *.nds
-nds/
-rawdb/
+nds/*
+nds
 .vscode/
 *.pprj
 *.ipynb

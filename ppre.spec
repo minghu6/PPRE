@@ -7,8 +7,8 @@ block_cipher = None
 a = Analysis(
     ['ppre.py'],
     pathex=[],
-    binaries=[('PPRE.ico', '.')],
-    datas=[('Table.tbl', '.'), ('bin', 'bin')],
+    binaries=[('PPRE.ico', '.'), ('bin', 'bin')],
+    datas=[('Table.tbl', '.'), ('rawdb/nds', 'nds')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
