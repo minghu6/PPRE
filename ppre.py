@@ -8,7 +8,6 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
-from compat import *
 import config
 from language import translations
 import ndstool
@@ -202,6 +201,7 @@ class MainWindow(QMainWindow):
         else:
             self.set_default_projectinfo()
 
+        
         self.set_project_config()
 
     def newProject(self):

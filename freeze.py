@@ -1,10 +1,13 @@
-import sys
+from py2exe import freeze
 
-sys.argv = ["freeze.py", "py2exe"]
+options = {
+      'bundle_files': 3,
+      "verbose": 4,
+      'includes': ['PyQt6.sip']
+}
 
-from distutils.core import setup
-import py2exe
-
-setup(windows=[{"script" : "ppre.py"}],
-      options={"py2exe" : {"includes" : ["sip"], "bundle_files":1}},
-      zipfile=None) 
+freeze(
+      windows=['ppre.py'],
+      data_files=[('', ['PPRE.ico'])],
+      options=options
+)

@@ -2,7 +2,7 @@ import pathlib
 import csv
 from typing import List
 
-from compat import configparser
+import configparser
 
 # config version
 version = 1
@@ -94,7 +94,8 @@ class OpenedHistoyRecorder:
         self.his.pop(k)
 
     def save(self):
-        with open(self.his_file, 'w') as fw:
+        # newline = '' it's important for windows python
+        with open(self.his_file, 'w', newline='') as fw:
             csv.writer(fw).writerows(self.his.items())
 
 

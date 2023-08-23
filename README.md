@@ -54,3 +54,6 @@ Just open an existed project folder (File > Open Folder, and select project fold
 1. Start Editing (Edit > Some editor), need save manually
 1. Write your changes to a new ROM (File > Export)
 
+How to bundle:
+1. install PyInstaller (`pip install pyinstaller`) (Don't install python through windows store!)
+1. `pyinstaller pppre.spec`

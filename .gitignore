@@ -1,10 +1,11 @@
 *.pyc
 __pycache__
 *.nds
-nds/*
-nds
+nds/
+rawdb/
 .vscode/
 *.pprj
 *.ipynb
 draft/
-
+build/
+dist/
