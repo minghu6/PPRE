@@ -52,8 +52,17 @@ Or
 Just open an existed project folder (File > Open Folder, and select project folder)
 
 1. Start Editing (Edit > Some editor), need save manually
-1. Write your changes to a new ROM (File > Export)
+1. Write your changes to a new ROM (File > Export Rom)
 
 How to bundle:
 1. install PyInstaller (`pip install pyinstaller`) (Don't install python through windows store!)
 1. `pyinstaller pppre.spec`
+
+How to make patch:
+1. Export the new rom (File > Export Rom)
+2. Make a patch (File > Make Patch, and select patch saving destination and name)
+
+Note:
+ 1. Making patch needs a base rom, it's baisclly a copy of origin nds when new a project, naming with `base.nds` in the toplevel of the project folder.
+ 1. For Linux, Making patch needs install `xdelta3`
+ 1. For Non x86 Arch Linux, As Dumping nds needs `ndstool`, we have one precompiled x86 binary version on the directory `bin`, however, For the other arch users, they need replace with their version's `ndstool`, or their just open an existed dump directory.

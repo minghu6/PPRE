@@ -36,6 +36,7 @@ translations = {
 "error_nonewrom":"Output ROM must be created before this action is performed",
 "error_nopatch":"Patch file does not exist",
 "error_unimplemented": "Not Implemented Yet",
+"ok_output_rom": "Export Succeed!",
 "text_textfile":"Text File: ",
 "pokemontab_desc":"&Name and Flavor",
 "pokemontab_general":"&General",

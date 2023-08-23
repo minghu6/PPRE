@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 import os
 import sys
 import shutil
+from enum import Enum, auto
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -27,53 +29,102 @@ class version:
 
 if "--help" in sys.argv or "-h" in sys.argv:
     print("""Project Pokemon ROM Editor 2 - 2023
-Usage: %s [options]
+Usage: %s [-l|-n] [-d]
 Options:
- --load/-l <dir>     Loads a project folder
+ --load/-l <dir>            Loads a project folder
  --new /-n ndsfile.nds      Creates a new project from a ROM
  --dlg /-d dialog           Starts a dialog
 
 Dialogs:
- home                       Main Window
- texteditor                 Text Editor
- pokemoneditor              Pokemon Editor""" % (sys.argv[0]))
+ text           Text Editor
+ move           Move Editor
+ pokemon        Pokemon Editor""" % (sys.argv[0]))
     exit()
 
+restart = False
+
+class StartAction(Enum):
+    Empty = auto(),
+    NewNDS = auto(),
+    OpenFolder = auto(),
+
+class StartAction2(Enum):
+    Empty = auto(),
+    Text = auto(),
+    Move = auto(),
+    Pokemon = auto(),
 
 class MainWindow(QMainWindow):
-    def __init__(self, app, parent=None):
+    def __init__(self, app: QApplication, parent=None):
         super().__init__(parent)
         self.parent = parent
         self.app = app
+
+        self.preProcess()
+        self.setupUi()
+        self.postProcess()
+
+    def preProcess(self):
         self._projFolder = None
         self.openedHisRecorder = config.OpenedHistoyRecorder()
         config.mw = self
-        self.setupUi()
         self.dirty = False
+
+        self.start_args = {}
+        self.start_action = StartAction.Empty
+        self.start_action2 = StartAction2.Empty
+
+        print(sys.argv)
+
         args = sys.argv[1:]
 
         if args:
             while args:
                 arg = args.pop(0)
                 if arg in ["-l", "--load"]:
-                    self.openProjectOf(args.pop(0))
+                    self.start_args['projFolder'] = args.pop(0)
+                    self.start_action = StartAction.OpenFolder
+                    self.openedHisRecorder.push(self.start_args['projFolder'])
+
                 elif arg in ["-n", "--new"]:
-                    self.newProjectOf(args.pop(0))
+                    self.start_args['ndsFile'] = args.pop(0)
+                    self.start_action = StartAction.NewNDS
+
                 elif arg in ["-d", "--dialog"]:
                     arg = args.pop(0)
-                    if arg == "home":
-                        pass
-                    elif arg == "texteditor":
-                        edittext.create()
-                    elif arg == "pokemoneditor":
-                        editpokemon.create()
+
+                    if arg == "text":
+                        self.start_action2 = StartAction2.Text
+                    elif arg == "pokemon":
+                        self.start_action2 = StartAction2.Pokemon
+                    elif arg == "move":
+                        self.start_action2 = StartAction2.Move
                 else:
-                    print("Unrecognized argument: %s" % arg)
+                    print("Unrecognized argument: %s" % arg, file=sys.stderr)
         else:
             records = self.openedHisRecorder.fetch()
 
             if records:
-                self.openProjectOf(records[0])
+                self.start_action = StartAction.OpenFolder
+                self.start_args['projFolder'] = records[0]
+
+    def postProcess(self):
+        match self.start_action:
+            case StartAction.OpenFolder:
+                self.openProjectOf(self.start_args['projFolder'])
+
+            case StartAction.NewNDS:
+                self.newProjectOf(self.start_args['ndsFile'])
+
+        match self.start_action2:
+            case StartAction2.Text:
+                edittext.create()
+
+            case StartAction2.Pokemon:
+                editpokemon.create()
+
+            case StartAction2.Move:
+                editmoves.create()
 
     def setupUi(self):
         self.setObjectName("MainWindow")
@@ -111,7 +162,7 @@ class MainWindow(QMainWindow):
             act = QAction(rec, parent=open_recently_menu)
             open_recently_menu.addAction(act)
 
-        open_recently_menu.triggered.connect(lambda action: self.openProjectOf(action.text()))
+        open_recently_menu.triggered.connect(lambda action: self.restartOpenProject(action.text()))
 
         self.menutasks['open_recently'] = open_recently_menu
         self.menus["file"].addMenu(self.menutasks["open_recently"])
@@ -180,6 +231,8 @@ class MainWindow(QMainWindow):
 
     @projFolder.setter
     def projFolder(self, val):
+        """ BE CAREFUL: It woulld determine proj file saving destination """
+
         self._projFolder = val
         self.projFile = os.path.join(self._projFolder, '.pprj')
         self.openedHisRecorder.push(self.projFolder)
@@ -190,7 +243,30 @@ class MainWindow(QMainWindow):
             "Open PPRE Project Folder"
         )
         if projFolder:
-            self.openProjectOf(projFolder)
+            self.restartOpenProject(projFolder)
+
+    def restartOpenProject(self, projFolder, action2: StartAction2 = StartAction2.Empty):
+        # save opened history
+        self.openedHisRecorder.save()
+
+        global restart
+        restart = True
+
+        sys.argv = sys.argv[:1]
+        sys.argv.append('-l')
+        sys.argv.append(projFolder)
+
+        match action2:
+            case StartAction2.Text:
+                sys.argv.extend(['-d', 'text'])
+
+            case StartAction2.Pokemon:
+                sys.argv.extend(['-d', 'pokemon'])
+
+            case StartAction2.Move:
+                sys.argv.extend(['-d', 'move'])
+
+        self.close()
 
     def openProjectOf(self, projFolder):
         self.projFolder = projFolder
@@ -201,7 +277,6 @@ class MainWindow(QMainWindow):
         else:
             self.set_default_projectinfo()
 
-        
         self.set_project_config()
 
     def newProject(self):
@@ -214,7 +289,6 @@ class MainWindow(QMainWindow):
         d, tail = os.path.split(os.path.abspath(ndsFile))
         name = os.path.splitext(tail)[0]
         d = os.path.join(d, name)
-        self.projFolder = d
 
         if os.path.exists(d):
             prompt = QMessageBox.question(None, "Overwrite directory?",
@@ -229,11 +303,12 @@ class MainWindow(QMainWindow):
                     os.unlink(d)
             else:
                 return
+
         os.makedirs(d)
         ndstool.dump(ndsFile, d)
-        self.dirty = True
-        self.set_default_projectinfo()
-        self.set_project_config()
+        shutil.copy(ndsFile, os.path.join(d, config.defaults['origin_nds_fn']))
+        self.restartOpenProject(d, self.start_action2)
+        self.start_action2 = StartAction.Empty
 
     def set_default_projectinfo(self):
         """ After projFolder is set """
@@ -269,12 +344,15 @@ class MainWindow(QMainWindow):
                                  translations["error_noromloaded"])
             return
         ndstool.build(output, config.project["directory"])
+        QMessageBox.information(None,
+                                translations["ok_output_rom"],
+                                output)
 
     def makePatch(self):
         if not config.project:
             QMessageBox.critical(None, translations["error_noromloaded_title"],
                                  translations["error_noromloaded"])
-        inrom = str(self.projectinfo["location_base_value"].text())
+        inrom = os.path.join(self.projFolder, config.defaults['origin_nds_fn'])
         outrom = str(self.projectinfo["project_output_value"].text())
         if not os.path.exists(inrom):
             QMessageBox.critical(None, translations["error_noromloaded_title"],
@@ -303,7 +381,15 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     app = QApplication(sys.argv)
-    mw = MainWindow(app)
 
-    mw.show()
-    app.exec()
+    while True:
+        mw = MainWindow(app)
+
+        if not restart:
+            mw.show()
+            app.exec()
+
+        if not restart:
+            break
+        else:
+            restart = False

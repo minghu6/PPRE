@@ -15,9 +15,12 @@ from nds import narc, txt
 from nds.fmt import movedatafmt
 
 files = pokeversion.movefiles
+edit_moves_instance = None
+
 
 class EditMoves(EditDlg):
     wintitle = "Move Editor"
+
     def __init__(self, parent=None):
         super(EditMoves, self).__init__(parent)
         game = config.project["versioninfo"][0]
@@ -82,9 +85,22 @@ class EditMoves(EditDlg):
         sb.setName(translate(name))
         return sb
 
+    def closeEvent(self, event):
+        super().closeEvent(event)
+        global edit_moves_instance
+        edit_moves_instance = None
+
+
 def create():
     if not config.project:
         QMessageBox.critical(None, translations["error_noromloaded_title"],
             translations["error_noromloaded"])
         return
-    EditMoves(config.mw).show()
+
+    global edit_moves_instance
+
+    if edit_moves_instance is None:
+        edit_moves_instance = EditMoves(config.mw)
+        edit_moves_instance.show()
+
+    edit_moves_instance.activateWindow()

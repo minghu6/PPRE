@@ -14,6 +14,8 @@ import pokeversion
 from nds import narc, txt
 
 files = pokeversion.textfiles
+edit_text_instance = None
+
 
 class EditText(EditDlg):
     wintitle = "%s - Text Editor - PPRE"
@@ -111,6 +113,7 @@ class EditText(EditDlg):
             self.saveText()
         self.prevfile = i
         self.currentfile = i
+        self.updateWindowTitle(i)
         self.textedit.setEnabled(True)
         version = config.project["versioninfo"]
         if pokeversion.gens[version[0]] == 4:
@@ -122,6 +125,10 @@ class EditText(EditDlg):
             buff += entry[0]+": "+entry[1]+"\n\n"
         self.textedit.setText(buff.strip("\n"))
         self.dirty = False
+
+    def updateWindowTitle(self, i: int):
+        """ override super """
+        self.setWindowTitle(EditText.wintitle % str(i))
 
     def saveText(self):
         version = config.project["versioninfo"]
@@ -177,7 +184,11 @@ class EditText(EditDlg):
 
     def closeEvent(self, event):
         """ override parent """
-        self.saveText()
+        if self.dirty:
+            self.saveText()
+
+        global edit_text_instance
+        edit_text_instance = None
 
 
 def create():
@@ -185,4 +196,11 @@ def create():
         QMessageBox.critical(None, translations["error_noromloaded_title"],
             translations["error_noromloaded"])
         return
-    EditText(config.mw).show()
+
+    global edit_text_instance
+
+    if edit_text_instance is None:
+        edit_text_instance = EditText(config.mw)
+        edit_text_instance.show()
+
+    edit_text_instance.activateWindow()

@@ -15,6 +15,7 @@ from nds import txt
 from nds.fmt import dexfmt, evofmt
 
 files = pokeversion.pokemonfiles
+edit_pokemon_instance = None
 
 stats = ("hp", "atk", "def", "speed", "spatk", "spdef")
 
@@ -288,10 +289,21 @@ class EditPokemon(EditDlg):
         le.setName(translate(name))
         return le
 
+    def closeEvent(self, event):
+        super().closeEvent(event)
+        global edit_pokemon_instance
+        edit_pokemon_instance = None
+
 
 def create():
     if not config.project:
         QMessageBox.critical(None, translations["error_noromloaded_title"],
             translations["error_noromloaded"])
         return
-    EditPokemon(config.mw).show()
+    global edit_pokemon_instance
+
+    if edit_pokemon_instance is None:
+        edit_pokemon_instance = EditPokemon(config.mw)
+        edit_pokemon_instance.show()
+
+    edit_pokemon_instance.activateWindow()

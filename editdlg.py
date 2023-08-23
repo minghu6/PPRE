@@ -339,13 +339,14 @@ class EditDlg(QMainWindow):
         self.save()
 
     def updateWindowTitle(self, text=None):
-        if self.dirty:
-            dirt = " [modified]"
-        else:
-            dirt = ""
         if not text:
             text = self.chooser.currentText()
-        self.setWindowTitle("%s%s - %s - PPRE"%(text, dirt, self.wintitle))
+
+            if text == '-':
+                text = '<Empty>'
+
+        self.setWindowTitle(f"{text} - {self.wintitle} - PPRE")
+
     def addMenuEntry(self, menuname, text, callback, shortcut=None):
         action = QAction(self.menus[menuname])
         action.setText(text)
