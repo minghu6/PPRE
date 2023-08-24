@@ -183,6 +183,7 @@ class EditDlg(QMainWindow):
         self.chooser = QComboBox(self.widgetcontainer)
         self.chooser.setGeometry(QRect(50, 25, 200, 20))
         self.chooser.setEditable(True)
+        self.chooser.setCurrentIndex(0)
         self.chooser.currentIndexChanged[int].connect(self.openChoice)
         self.currentLabel = QLabel(self.widgetcontainer)
         self.currentLabel.setGeometry(QRect(260, 25, 100, 20))
@@ -211,6 +212,8 @@ class EditDlg(QMainWindow):
             tab[7].setGeometry(QRect(0, 0, mx+rect.width(), y))
         if changed:
             self.changed()
+    def changed(self):
+        pass
     def removeFromListTab(self, target):
         for tab in self.listtabs:
             for w in tab[3]:
@@ -232,8 +235,7 @@ class EditDlg(QMainWindow):
             tab[3].append(w)
         self.sortLists()
     def openChoice(self, i):
-        if self.prevchoice:
-            self.save()
+        self.save()
         self.prevchoice = self.currentchoice
         self.currentchoice = i
         self.currentLabel.setText("File ID: %i"%i)
@@ -288,10 +290,21 @@ class EditDlg(QMainWindow):
             fields = tab[3]
             args = []
             for w in fields:
+                # It maybe caused by PPRE1 bad saving, let's relax it
+                # since color doesn't matter, refer the follow link:
+                # https://bulbapedia.bulbagarden.net/wiki/List_of_Pok%C3%A9mon_by_color  
+                if w.getValue() == -1 and w.label.text() == 'color':
+                    args.append(0)
+                    continue
+
                 args.append(w.getValue())
-            data = struct.pack(fmt[0], *args)
-            tab[0].gmif.files[self.currentchoice] = data
-            tab[0].toFile(open(tab[1], "wb"))
+            try:
+                data = struct.pack(fmt[0], *args)
+            except Exception as ex:
+                print(ex, file=sys.stderr)
+            else:
+                tab[0].gmif.files[self.currentchoice] = data
+                tab[0].toFile(open(tab[1], "wb"))
         for tab in self.listtabs:
             fmt = tab[2]
             fields = tab[3]

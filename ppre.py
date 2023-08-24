@@ -243,6 +243,8 @@ class MainWindow(QMainWindow):
             "Open PPRE Project Folder"
         )
         if projFolder:
+            # ensure the path's sep is os spec instead of fixed '/'
+            projFolder = os.path.abspath(projFolder)
             self.restartOpenProject(projFolder)
 
     def restartOpenProject(self, projFolder, action2: StartAction2 = StartAction2.Empty):
@@ -317,7 +319,8 @@ class MainWindow(QMainWindow):
 
         self.projectinfo["location_directory_value"].setText(self.projFolder)
         self.projectinfo["project_name_value"].setText(folderName)
-        self.projectinfo["project_output_value"].setText(os.path.join(self.projFolder, folderName+'.nds'))
+        self.projectinfo["project_output_value"].setText(
+            os.path.join(self.projFolder, folderName+'.nds'))
 
     def set_project_config(self):
         config.project = {"directory": self.projFolder}
