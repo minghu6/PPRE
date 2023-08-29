@@ -24,7 +24,7 @@ import editdlg
 class version:
     major = 0
     minor = 2
-    revision = 0
+    revision = 1
 
 
 if "--help" in sys.argv or "-h" in sys.argv:

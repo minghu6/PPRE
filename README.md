@@ -30,10 +30,10 @@ Current Game Support:
 * Platinum (US)
 * Heart Gold (US)
 * Soul Silver (US)
-* Black (US)
-* White (US)
-* Black2 (US)
-* White2 (US)
+* ~~Black (US)~~
+* ~~White (US)~~
+* ~~Black2 (US)~~
+* ~~White2 (US)~~
 
 Current Editors (incomplete):
 * Pokemon Editor (Read/Write)
@@ -72,4 +72,13 @@ How to bundle:
 Note：
 1. For Windows, [install upx to reduce bundle size](https://pyinstaller.org/en/stable/usage.html?highlight=compress#using-upx).
 
-1. For Windows, needs 7z on path; For Linux needs zip on path
+1. For Windows, needs 7z on path; For Linux needs zip on path.
+
+Warning:
+
+* Supporting for Gen V hasn't be completed indeed, which causue edition may output a broken rom !!
+
+TODO:
+
+* Complete basic suppport for Gen V.
+* For further maybe rewrite core lib `rawdb` to support thoses unofficial roms (hacked rooms) edition. 
